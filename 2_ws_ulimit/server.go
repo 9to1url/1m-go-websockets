@@ -40,7 +40,8 @@ func ws(w http.ResponseWriter, r *http.Request) {
 		}
 
 		receivedTime := time.Now()
-		log.Printf("msg: %s received at: %s", string(msg), receivedTime.Format(time.RFC3339Nano))
+		_ = msg
+		//log.Printf("msg: %s received at: %s", string(msg), receivedTime.Format(time.RFC3339Nano))
 
 		if err := conn.WriteMessage(websocket.TextMessage, []byte(receivedTime.Format(time.RFC3339Nano))); err != nil {
 			log.Printf("Write error: %v", err)

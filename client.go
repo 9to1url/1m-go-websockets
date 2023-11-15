@@ -52,6 +52,7 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 			time.Sleep(tts)
 			sendTime := time.Now()
 			msg := fmt.Sprintf("Hello from client, sent at %s", sendTime.Format(time.RFC3339Nano))
+			log.Printf("client msg: %s", msg)
 			if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
 				log.Printf("Failed to send message: %v", err)
 				continue
@@ -63,8 +64,9 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 				continue
 			}
 
-			serverTime, _ := time.Parse(time.RFC3339Nano, string(response))
-			latency := time.Since(serverTime)
+			//serverTime, _ := time.Parse(time.RFC3339Nano, string(response))
+			log.Printf("server msg: %s", string(response))
+			latency := time.Since(sendTime)
 			log.Printf("Round-trip latency: %v", latency)
 		}
 	}
