@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"sync/atomic"
 	"syscall"
 	"time"
