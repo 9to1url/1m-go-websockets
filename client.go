@@ -35,11 +35,11 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 			break
 		}
 		conns = append(conns, c)
-		defer func() {
-			c.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""), time.Now().Add(time.Second))
+		defer func(conn *websocket.Conn) {
+			conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""), time.Now().Add(time.Second))
 			time.Sleep(time.Second)
-			c.Close()
-		}()
+			conn.Close()
+		}(c)
 	}
 
 	log.Printf("Finished initializing %d connections", len(conns))
@@ -48,14 +48,24 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 		tts = time.Millisecond * 5
 	}
 	for {
-		for i := 0; i < len(conns); i++ {
+		for _, conn := range conns {
 			time.Sleep(tts)
-			conn := conns[i]
-			log.Printf("Conn %d sending message", i)
-			if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(time.Second*5)); err != nil {
-				fmt.Printf("Failed to receive pong: %v", err)
+			sendTime := time.Now()
+			msg := fmt.Sprintf("Hello from client, sent at %s", sendTime.Format(time.RFC3339Nano))
+			if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+				log.Printf("Failed to send message: %v", err)
+				continue
 			}
-			conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Hello from conn %v", i)))
+
+			_, response, err := conn.ReadMessage()
+			if err != nil {
+				log.Printf("Failed to read message: %v", err)
+				continue
+			}
+
+			serverTime, _ := time.Parse(time.RFC3339Nano, string(response))
+			latency := time.Since(serverTime)
+			log.Printf("Round-trip latency: %v", latency)
 		}
 	}
 }
