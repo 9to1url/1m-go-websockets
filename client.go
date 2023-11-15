@@ -27,6 +27,8 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 
 	u := url.URL{Scheme: "ws", Host: *ip + ":8000", Path: "/"}
 	log.Printf("Connecting to %s", u.String())
+
+	startTime := time.Now()
 	var conns []*websocket.Conn
 	for i := 0; i < *connections; i++ {
 		c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -41,6 +43,9 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 			c.Close()
 		}()
 	}
+
+	finishTimeNeeded := time.Since(startTime)
+	log.Printf("Setup %v connections time needed: %v", *connections, finishTimeNeeded)
 
 	log.Printf("Finished initializing %d connections", len(conns))
 	tts := time.Second
