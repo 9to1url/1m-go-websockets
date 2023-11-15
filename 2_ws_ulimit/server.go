@@ -56,6 +56,7 @@ func main() {
 	previousLimit := SetMemoryLimit(11 * 1024 * 1024 * 1024) // 11 GB
 	println("Previous memory limit:", previousLimit)
 
+        // Increase resources limitations
 	var rLimit syscall.Rlimit
 	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit); err != nil {
 		panic(err)
@@ -66,6 +67,7 @@ func main() {
 		panic(err)
 	}
 
+        // Enable pprof hooks
 	go func() {
 		if err := http.ListenAndServe("localhost:6060", nil); err != nil {
 			log.Fatalf("Pprof failed: %v", err)
