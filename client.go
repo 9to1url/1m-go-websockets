@@ -35,11 +35,11 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 			break
 		}
 		conns = append(conns, c)
-		defer func(conn *websocket.Conn) {
-			conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""), time.Now().Add(time.Second))
+		defer func() {
+			c.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""), time.Now().Add(time.Second))
 			time.Sleep(time.Second)
-			conn.Close()
-		}(c)
+			c.Close()
+		}()
 	}
 
 	log.Printf("Finished initializing %d connections", len(conns))
