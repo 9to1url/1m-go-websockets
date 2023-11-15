@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	_ "net/http/pprof"
+	"runtime"
+	"runtime/debug"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -51,6 +53,9 @@ func ws(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	previousLimit := SetMemoryLimit(11 * 1024 * 1024 * 1024) // 11 GB
+	println("Previous memory limit:", previousLimit)
+
 	var rLimit syscall.Rlimit
 	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit); err != nil {
 		panic(err)
@@ -71,4 +76,25 @@ func main() {
 	if err := http.ListenAndServe(":8000", nil); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// SetMemoryLimit sets a limit on the maximum memory usage of the Go program.
+// The limit is specified in bytes. Returns the previous limit.
+func SetMemoryLimit(limit int64) int64 {
+	// Estimate the current limit based on total memory and the current GC target percentage.
+	memStats := &runtime.MemStats{}
+	runtime.ReadMemStats(memStats)
+	previousLimit := int64(memStats.HeapAlloc) * 100 / int64(debug.SetGCPercent(-1))
+
+	// Calculate the new GC target percentage based on the desired memory limit.
+	// If the limit is zero, reset to default GC behavior.
+	if limit > 0 {
+		newGCTarget := int(int64(100*memStats.HeapAlloc) / limit)
+		debug.SetGCPercent(newGCTarget)
+	} else {
+		debug.SetGCPercent(100) // Reset to default
+	}
+
+	// Return the previous limit for reference.
+	return previousLimit
 }
