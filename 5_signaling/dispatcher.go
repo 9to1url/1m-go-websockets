@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
@@ -8,6 +9,7 @@ import (
 )
 
 type Message struct {
+	Sender    string
 	Recipient string
 	Content   string
 }
@@ -53,8 +55,19 @@ func worker(name string, ch chan Message, conn *websocket.Conn) {
 		fmt.Printf("%s received message: %s\n", name, msg.Content)
 
 		// wait on channel for response, if received the ch message, then use websocket send the message to client
+		// create a new server.go 's IncomingMessage struct, and then marshal the struct to json string, and then send the json string to client
+		var incomingMsg IncomingMessage
+		incomingMsg.Type = "sdp"
+		incomingMsg.Caller = msg.Sender
+		incomingMsg.Callee = msg.Recipient
+		incomingMsg.Message = msg.Content
+		jsonMsg, err := json.Marshal(incomingMsg)
+		if err != nil {
+			log.Printf("Error parsing message: %v", err)
+			continue
+		}
 
-		if err := conn.WriteMessage(websocket.TextMessage, []byte(msg.Content)); err != nil {
+		if err := conn.WriteMessage(websocket.TextMessage, []byte(jsonMsg)); err != nil {
 			log.Printf("Write error: %v", err)
 			return
 		}

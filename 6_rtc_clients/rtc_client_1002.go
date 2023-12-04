@@ -40,7 +40,8 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 	}()
 
 	msg := `{
-    "to": "1002",
+    "caller": "1002",
+    "callee": "1002",
     "message": "login",
     "type": "register"
 }`

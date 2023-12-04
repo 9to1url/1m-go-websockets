@@ -15,7 +15,8 @@ import (
 var count int64
 
 type IncomingMessage struct {
-	To      string `json:"to"`
+	Caller  string `json:"caller"`
+	Callee  string `json:"callee"`
 	Message string `json:"message"`
 	Type    string `json:"type"`
 }
@@ -70,17 +71,18 @@ func ws(w http.ResponseWriter, r *http.Request) {
 			dispatcher := GetDispatcher()
 
 			// Register the new channel with the dispatcher
-			dispatcher.Register(incomingMsg.To, ch)
+			dispatcher.Register(incomingMsg.Callee, ch)
 
 			// Optionally, start a worker goroutine for the new recipient
 			// add the websocket connection to worker and listen the ch, if received the ch message, then use websocket send the message to client
-			go worker(incomingMsg.To, ch, conn)
+			go worker(incomingMsg.Callee, ch, conn)
 
-			log.Printf("Registered %s with the dispatcher", incomingMsg.To)
+			log.Printf("Registered %s with the dispatcher", incomingMsg.Callee)
 		} else if incomingMsg.Type == "sdp" {
 			// Create a new message with the recipient and content
 			msg := Message{
-				Recipient: incomingMsg.To,
+				Sender:    incomingMsg.Caller,
+				Recipient: incomingMsg.Callee,
 				Content:   incomingMsg.Message,
 			}
 

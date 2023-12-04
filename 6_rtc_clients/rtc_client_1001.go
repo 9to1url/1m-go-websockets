@@ -40,7 +40,8 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 	}()
 
 	msg := `{
-    "to": "1001",
+    "caller": "1001",
+    "callee": "1001",
     "message": "login",
     "type": "register"
 }`
@@ -52,7 +53,8 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 
 	time.Sleep(time.Second)
 	msgCall := `{
-    "to": "1002",
+    "caller": "1001",
+    "callee": "1002",
     "message": "v=0\no=- 123456789 123456789 IN IP4 127.0.0.1\ns=Session SDP\nc=IN IP4 127.0.0.1\nt=0 0\nm=audio 5004 RTP/AVP 96\na=rtpmap:96 opus/48000",
     "type": "sdp"
 }`
