@@ -54,7 +54,7 @@ func establishConnection(u url.URL) (*websocket.Conn, error) {
 		for {
 			select {
 			case <-pingTicker.C:
-				if err := conn.WriteControl(websocket.PingMessage, []byte("ping"), time.Now().Add(time.Second)); err != nil {
+				if err := conn.WriteControl(websocket.PingMessage, []byte("ping from client, are you echo?"), time.Now().Add(time.Second)); err != nil {
 					log.Printf("Failed to send ping: %v", err)
 					conn.Close()
 					return
