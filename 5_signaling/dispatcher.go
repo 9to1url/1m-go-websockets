@@ -12,6 +12,7 @@ type Message struct {
 	Sender    string
 	Recipient string
 	Content   string
+	Typ       string
 }
 
 type Dispatcher struct {
@@ -50,14 +51,14 @@ func (d *Dispatcher) Send(msg Message) {
 	}
 }
 
-func worker(name string, ch chan Message, conn *websocket.Conn) {
+func worker(myself string, ch chan Message, conn *websocket.Conn) {
 	for msg := range ch {
-		fmt.Printf("%s received message: %s\n", name, msg.Content)
+		//fmt.Printf("%s received message: %s\n", name, msg.Content)
 
 		// wait on channel for response, if received the ch message, then use websocket send the message to client
 		// create a new server.go 's IncomingMessage struct, and then marshal the struct to json string, and then send the json string to client
 		var incomingMsg IncomingMessage
-		incomingMsg.Type = "sdp"
+		incomingMsg.Type = msg.Typ
 		incomingMsg.Caller = msg.Sender
 		incomingMsg.Callee = msg.Recipient
 		incomingMsg.Message = msg.Content
@@ -72,5 +73,4 @@ func worker(name string, ch chan Message, conn *websocket.Conn) {
 			return
 		}
 	}
-	fmt.Printf("%s exiting\n", name)
 }

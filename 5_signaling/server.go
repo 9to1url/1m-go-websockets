@@ -41,6 +41,8 @@ func ws(w http.ResponseWriter, r *http.Request) {
 		conn.Close()
 	}()
 
+	var myself string = "unknown"
+
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
@@ -67,23 +69,53 @@ func ws(w http.ResponseWriter, r *http.Request) {
 			// Create a new channel for the recipient
 			ch := make(chan Message)
 
+			myself = incomingMsg.Caller
+
 			// Get the dispatcher instance
 			dispatcher := GetDispatcher()
 
 			// Register the new channel with the dispatcher
-			dispatcher.Register(incomingMsg.Callee, ch)
+			dispatcher.Register(incomingMsg.Caller, ch)
 
 			// Optionally, start a worker goroutine for the new recipient
 			// add the websocket connection to worker and listen the ch, if received the ch message, then use websocket send the message to client
-			go worker(incomingMsg.Callee, ch, conn)
+			go worker(myself, ch, conn)
 
-			log.Printf("Registered %s with the dispatcher", incomingMsg.Callee)
+			log.Printf("Registered %s with the dispatcher", incomingMsg.Caller)
 		} else if incomingMsg.Type == "sdp" {
+
+			if myself == "unknown" {
+				log.Printf("myself is unknown")
+				// exit websocket connection
+				return
+			}
+
 			// Create a new message with the recipient and content
 			msg := Message{
-				Sender:    incomingMsg.Caller,
+				Sender:    myself,
 				Recipient: incomingMsg.Callee,
 				Content:   incomingMsg.Message,
+				Typ:       "sdp",
+			}
+
+			// Get the dispatcher instance
+			dispatcher := GetDispatcher()
+
+			// Send the message to the recipient
+			dispatcher.Send(msg)
+		} else if incomingMsg.Type == "candidate" {
+			if myself == "unknown" {
+				log.Printf("myself is unknown")
+				// exit websocket connection
+				return
+			}
+
+			// Create a new message with the recipient and content
+			msg := Message{
+				Sender:    myself,
+				Recipient: incomingMsg.Callee,
+				Content:   incomingMsg.Message,
+				Typ:       "candidate",
 			}
 
 			// Get the dispatcher instance
