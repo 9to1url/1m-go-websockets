@@ -209,6 +209,8 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 		// Check if the message type is "register"
 		if incomingMsg.Type == "candidate" {
 
+			log.Printf("msg candidate part: %s", incomingMsg.Message)
+
 			candidate := webrtc.ICECandidateInit{}
 			if err := json.Unmarshal([]byte(incomingMsg.Message), &candidate); err != nil {
 				panic(err)
@@ -223,9 +225,16 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 			sdp.Type = webrtc.SDPTypeOffer
 			sdp.SDP = incomingMsg.Message
 
+			//if err := json.Unmarshal([]byte(incomingMsg.Message), &sdp); err != nil {
+			//	panic(err)
+			//}
+
 			if err := peerConnection.SetRemoteDescription(sdp); err != nil {
 				panic(err)
 			}
+
+			// Create channel that is blocked until ICE Gathering is complete
+			gatherComplete := webrtc.GatheringCompletePromise(peerConnection)
 
 			// Create an answer to send to the other process
 			answer, err := peerConnection.CreateAnswer(nil)
@@ -242,6 +251,11 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 			if err != nil {
 				panic(err)
 			}
+
+			// Block until ICE Gathering is complete, disabling trickle ICE
+			// we do this because we only can exchange one signaling message
+			// in a production application you should exchange ICE Candidates via OnICECandidate
+			<-gatherComplete
 
 			candidatesMux.Lock()
 			for _, c := range pendingCandidates {

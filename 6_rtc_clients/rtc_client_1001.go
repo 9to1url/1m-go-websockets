@@ -254,6 +254,10 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 			sdp.Type = webrtc.SDPTypeAnswer
 			sdp.SDP = incomingMsg.Message
 
+			//if err := json.Unmarshal([]byte(incomingMsg.Message), &sdp); err != nil {
+			//	panic(err)
+			//}
+
 			if sdpErr := peerConnection.SetRemoteDescription(sdp); sdpErr != nil {
 				panic(sdpErr)
 			}
