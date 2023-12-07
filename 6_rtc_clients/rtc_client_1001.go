@@ -180,7 +180,7 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 		fmt.Printf("Data channel '%s'-'%d' open. Random messages will now be sent to any connected DataChannels every 5 seconds\n", dataChannel.Label(), dataChannel.ID())
 
 		for range time.NewTicker(5 * time.Second).C {
-			message := RandSeq(15)
+			message := time.Now().String()
 			fmt.Printf("Sending '%s'\n", message)
 
 			// Send the message as text
@@ -239,16 +239,11 @@ Example usage: ./client -ip=172.17.0.1 -conn=10
 		}
 		// Check if the message type is "register"
 		if incomingMsg.Type == "candidate" {
-
-			candidate := webrtc.ICECandidateInit{}
-			if err := json.Unmarshal([]byte(incomingMsg.Message), &candidate); err != nil {
-				panic(err)
-			}
+			candidate := webrtc.ICECandidateInit{Candidate: incomingMsg.Message}
 
 			if candidateErr := peerConnection.AddICECandidate(candidate); candidateErr != nil {
 				panic(candidateErr)
 			}
-
 		} else if incomingMsg.Type == "sdp" {
 			sdp := webrtc.SessionDescription{}
 			sdp.Type = webrtc.SDPTypeAnswer
